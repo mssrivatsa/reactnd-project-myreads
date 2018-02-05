@@ -23,11 +23,23 @@ class ListBooks extends Component {
                      * info - i.e. when the ListBooks is called from SearchBooks component
                      */
                   }
+
+                  {
+                    /**
+                     * Udacity Review Suggestion
+                     * Books missing imageLinks/thumbnail are not displayed on the search page. 
+                     * For that, you can update your code adding a condition to render thumbnails only if the book has an imageLinks property. 
+                     * You can also use a default cover image in case the book does not have one. Here is a URL you can use for the default cover image: 
+                     * http://via.placeholder.com/128x193?text=No%20Cover (you can change the image size and text in the URL).
+                     * Like this:
+                     * backgroundImage:`url(${book.imageLinks && book.imageLinks.thumbnail?`${book.imageLinks.thumbnail}`:`http://via.placeholder.com/128x193?text=No%20Cover`})`
+                     */
+                  }
                   <div className="book-cover"                    
                     style={{
                       width: shelf.width || 128,
                       height: shelf.height || 192,
-                      backgroundImage: `url(${book.imageLinks.thumbnail})`
+                      backgroundImage:`url(${book.imageLinks && book.imageLinks.thumbnail?`${book.imageLinks.thumbnail}`:`http://via.placeholder.com/128x193?text=No%20Cover`})`
                     }}
                   />
                   <div className="book-shelf-changer">
@@ -39,7 +51,7 @@ class ListBooks extends Component {
                      */
                   }
                     <select
-                      value={book.shelf || "none"}
+                      value={book.shelf}
                       onChange={e => updateShelf(book, e.target.value)}
                     >
                       <option value="none" disabled>
@@ -55,7 +67,13 @@ class ListBooks extends Component {
                 </div>
                 <div className="book-title">{book.title}</div>
                 <div className="book-authors">
-                  {book.authors && book.authors.toString()}
+                  {
+                    /**
+                     * Udacity Review Suggestion
+                     * You can use a conditional rendering to separate author names with a comma
+                     */
+                  }
+                  {Array.isArray(book.authors) ? book.authors.join(', '): ''}
                 </div>
               </div>
             </li>

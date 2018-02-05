@@ -1,8 +1,28 @@
 import React, { Component } from "react"
 import { Link } from "react-router-dom"
 import ListBooks from "./ListBooks"
+import _ from "lodash"
 
 class SearchBooks extends Component {
+
+  /**
+   * Udacity Review Suggestion
+   * Create a debounce property when the SearchBooks component mounts
+   * Setting the current delay to 500 milliseconds
+   */
+  componentWillMount = () => {
+    this.delayedSearch = _.debounce(function (e) {
+      this.props.searchBooks(e.target.value)
+    }, 500);
+  }
+  /**
+   * Trigger a delayed search event based on the user's query
+   */
+  onChange = (e) => {
+    e.persist();
+    this.delayedSearch(e);
+  }
+
   render() {    
     /**
      * Declare the props beforehand to avoid repetitive use of this.
@@ -32,7 +52,7 @@ class SearchBooks extends Component {
             <input
               type="text"
               placeholder="Search by title or author"
-              onInput={(e) => searchBooks(e.target.value)}
+              onChange={this.onChange}
             />
           </div>
         </div>

@@ -7,14 +7,13 @@ import "./App.css";
 
 class BooksApp extends React.Component {
   state = {
-    /**
-     * TODO: Instead of using this state variable to keep track of which page
-     * we're on, use the URL in the browser's address bar. This will ensure that
-     * users can use the browser's back and forward buttons to navigate between
-     * pages, as well as provide a good URL they can bookmark and share.
-     */
     shelvedBooks: [],
-    searchResults: []
+    searchResults: [],
+    shelvedKeys: { 
+      currentlyReading: [],
+      wantToRead: [],
+      read: []
+    }
   };
 
   /**
@@ -22,29 +21,54 @@ class BooksApp extends React.Component {
    */
   componentDidMount() {
     BooksAPI.getAll().then(books => {
-      this.setState({ shelvedBooks: books });
-    });
+      /**
+       * Build the hashmap with shelf ids as keys and the books assigned to them as values 
+       * The format is same as the one returned by the BooksAPI.udpate method
+       * After the component mounts, this map is updated when there is an update to 
+       * the book object using the value returned by BooksAPI.update method
+       */
+      let shelvedKeys = this.state.shelvedKeys
+      books.map(book => shelvedKeys[book.shelf].push(book.id))
+      /**
+       * Set the state using books returned by BooksAPI.getAll and the previously 
+       * constructed map of shelf ids and their corresponding book ids
+       */
+      this.setState({ shelvedBooks: books, shelvedKeys: shelvedKeys })
+    })   
   }
 
   /**
    * Update the shelved book state when a book is placed into a different shelf 
    */
-  updateBookShelf = (book, shelf) => {
-    // Get the previous state and update it locally
-    let books = this.state.shelvedBooks;
-    books.filter(b => book.id === b.id).map(book => (book.shelf = shelf))
-
+  updateBookShelf = (book, shelf) => { 
     // Update the server with the modified book and shelf info
-    BooksAPI.update(book, shelf).then(() =>
-      // Update the state using modified info
-      this.setState({ shelvedBooks: books })
-    );
+    BooksAPI.update(book, shelf).then((data) => {          
+      // Update the local state using modified info returned by the server    
+      BooksAPI.getAll().then(books => {  
+        this.setState({ shelvedBooks: books, shelvedKeys: data })
+      })
+    })
   };
+
+  /**
+   * Using the value, search for the key in the map object
+   * returns key if found, otherwise returns "none"
+   */
+  findKeyFromValue = (object, value) => {    
+    let foundKey = Object.keys(object).find(key => object[key].includes(value))
+    return foundKey ? foundKey : "none"
+  }
 
   /**
    * Update the search results state in the BooksApp component 
    */
   updateSearchResults = results => {
+    const shelvedKeys = this.state.shelvedKeys
+    /**
+     * create the shelf property for the books in the search result using 
+     * the shelvedKeys map object 
+     */
+    results.map(res => res.shelf = this.findKeyFromValue(shelvedKeys, res.id))
     this.setState({ searchResults: results });
   };
 
@@ -53,13 +77,27 @@ class BooksApp extends React.Component {
    * When the query is invalid, handle the server error by returning empty result 
    */
   searchBooks = (query) => {
-    BooksAPI.search(query)
+    /**
+     * Udacity Review Suggestion
+     * An error is displayed on the console when the user totally erases the search input term.
+     * To fix it you should verify if there is a query before to make the BooksAPI.search(query)... call.
+     */
+    
+    /**
+     * Search only if the query is valid i.e not empty, handle server error by
+     * setting search results state to empty array
+     */
+    if(query.trim()) {
+      BooksAPI.search(query)
       .then(results => {
-        this.updateSearchResults(results);
+        this.updateSearchResults(results)
+      }).catch(() => {
+        this.updateSearchResults([])
       })
-      .catch(() => {
-        this.updateSearchResults([]);
-      });
+    }  
+    else {
+      this.updateSearchResults([])
+    }
   };
 
   render() {
